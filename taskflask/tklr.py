@@ -6,6 +6,7 @@ import re
 import pdb
 
 class Tklr():
+    keywords = 'bu'
     def __init__(self, filename):
         self.sections = []
         self.subsections = []
@@ -23,6 +24,10 @@ class Tklr():
             'DONEs',
         ]
         self.searchtags = {
+            'major_sections': {
+                'tag': '========== ',
+                'ignore': 'e.of',
+                'regex': r'========== '},
             'INs': {
                 'tag': '    ',
                 'ignore': '==',
@@ -38,6 +43,7 @@ class Tklr():
         }
 
     def match_keyword(self, line):
+        ''' checks if line contains one of the keywords from keyword dict '''
         for keyword in self.keywords:
             #print('kword: {}, line: {}'.format(keyword, line))
             if keyword in line:
@@ -51,13 +57,23 @@ class Tklr():
                 self.file_contents.append(one_line.strip('\n'))
 
     def load_full_dict(self):
-        #pdb.set_trace()
+        ''' uses metadata from find_sections for both major and minor subsections and populates
+            content of the self.dict dictionary with all subsections
+        '''
         # compute major sections metadata
-        self.find_sections(self.sections, tag='========== ', ignore='e.of', regex=r'========== ')
+        #res = self.find_sections(self.sections, tag=self.searchtags['major_sections']['tag'], ignore=self.searchtags['major_sections']['ignore'], regex=self.searchtags['major_sections']['regex'])
+        #pdb.set_trace()
+        major = self.searchtags['major_sections']
+        tag, ignore_string, regex = major['tag'], major['ignore'], major['regex']
+        res = self.find_sections(self.sections, tag, ignore_string, regex)
         # compute minor subsections metadata
         for section in self.sections:
             name = section[0]
-            self.find_sections(self.subsections, tag=self.searchtags[name]['tag'], ignore=self.searchtags[name]['ignore'], regex=self.searchtags[name]['regex'], start=section[1], end=section[2])
+            minor = self.searchtags[name]
+            tag, ignore_string, regex = minor['tag'], minor['ignore'], minor['regex']
+            #tag, ignore_string, regex = self.searchtags[name]
+            #pdb.set_trace()
+            self.find_sections(self.subsections, tag, ignore_string, regex, start=section[1], end=section[2])
         # store actual contents in dict
         for one_subsection in self.subsections:
             self.dict[one_subsection[0]] = {}
@@ -76,20 +92,25 @@ class Tklr():
     """
 
 
-    def find_sections(self, list_to_update, tag='========== ', ignore='e.of', regex=r'    \S', start=0, end=None):
+    def find_sections(self, list_to_update, tag, ignore_string, regex, start=0, end=None):
+    #def find_sections(self, list_to_update, schema_dict, start=0, end=None):
         '''
         using magic tags, discover subsections and note their names, start and end locations
         this only stores metadata about subsections into a list, load_dict func will 
         use this to retrieve data and store actual contents. 
         '''
         #pdb.set_trace()
+        '''
+        tag = schema_dict['tag']
+        ignore = schema_dict['ignore']
+        regex = schema_dict['regex']
+        '''
         if not self.file_contents:
             self.read_file(self.filename)
         temp_list = []
         temp_list = self.file_contents[start:] if not end else self.file_contents[start:end]
-        #for line_counter, one_line in enumerate(self.file_contents):
         for line_counter, one_line in enumerate(temp_list):
-            if re.match(regex, one_line) and ignore not in one_line and not self.match_keyword(one_line):
+            if re.match(regex, one_line) and ignore_string not in one_line and not self.match_keyword(one_line):
                 #pdb.set_trace()
                 tag_name = one_line.strip(tag).rstrip('\n')
                 tag_name = tag_name.split(':')[0]
