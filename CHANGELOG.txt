@@ -1,0 +1,5 @@
+0.1.1:
+    - fixed setup.py packaging issues
+0.1.0:
+    - split cmdline and tklr
+    - add --today functionality

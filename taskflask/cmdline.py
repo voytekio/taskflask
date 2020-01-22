@@ -1,34 +1,59 @@
+#!/usr/bin/python
 from __future__ import print_function
+import argparse
 import pdb
 
 import taskflask.tklr as tklrlib
-import taskflask.api as api
+#import taskflask.api as api
+
+def parseargs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f","--filename", help="name of tklr file", action = 'store', default = 'tklr_0_2.txt')
+    parser.add_argument("-p","--printsection", help="print section by name, ie M6", action = 'store')
+    parser.add_argument("-m","--movesection", help="move section's contents from one to another section, -m 'M6-M7'", action = 'store')
+    #parser.add_argument("-m","--mode", help="mode-either import or export", required=True, action = 'store')
+    parser.add_argument("-t","--today", help="move yesterdays section to today", action = 'store_true')
+    # action = 'store' is default (and can even be omitted)
+    # action = 'store_true' or 'store_false' are for flags:
+    #     if user specifes --execute, then args.execute will evaulate to True; otherwise False
+    args = parser.parse_args()
+    return args
 
 def run_flask():
     api.app.run(debug=True)
 
-if __name__ == '__main__':
+def main():
+    args = parseargs()
+    #    - if args.execute:
+    #            print "RW"
+    #        else:
+    #            print "RO"
+
     #api.app.run(host= '0.0.0.0', debug=True)
     #sys.exit(1)
     #pdb.set_trace()
-    #tklr = tklrlib.Tklr('/installers/tklr_0_2.txt')
-    tklr = tklrlib.Tklr('/installers/tklr_0_2_test.txt')
+    tklr = tklrlib.Tklr(args.filename)
     #tklr.find_major_sections()
     tklr.load_full_dict()
-    #tklr.find_sections(tklr.sections, tag='========== ', ignore='e.of', regex=r'========== ')
-    #tklr.find_sections(tklr.subsections, tag='    ', ignore='==', regex=r'    \S')
-    #tklr.load_dict()
-    #print(tklr.get_section('M5'),end="")
-    #print(tklr.get_section('M6'),end="")
-    pdb.set_trace()
-    tklr.move_section('09', '10')
-    #print(tklr.get_section('M5'),end="")
-    #print(tklr.get_section('M6'),end="")
-    tklr.print_all()
-    '''
-    def find_major_sections(self):
-        self.find_sections(self, self.sections, tag='========== ', ignore='e.of')
+    #pdb.set_trace()
+    if args.printsection:
+        print(tklr.get_section(args.printsection),end="")
+    if args.movesection:
+        from_section = args.movesection.split('-')[0]
+        to_section = args.movesection.split('-')[1]
+        tklr.move_section(from_section, to_section)
+        print('--------- after move ------')
+        print(tklr.get_section(from_section))
+        print(tklr.get_section(to_section))
+    if args.today:
+        print(tklr.print_today())
+        tklr.move_today()
+        print(tklr.print_today())
+        tklr.save_file()
+    #tklr.move_section('09', '10')
+    #print(tklr.get_section('M9'),end="")
+    #tklr.print_all()
 
-    def find_minor_sections(self):
-        self.find_sections(self, self.subsections, tag='    ', ignore='==')
-    '''
+if __name__ == '__main__':
+    main()
+

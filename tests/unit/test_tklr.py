@@ -58,20 +58,28 @@ def test_find_sections(mocker, sample_file_contents, list_to_update, section_nam
     ignore_attr = t2.searchtags[section_name]['ignore']
     regex_attr = t2.searchtags[section_name]['regex']
     # when
-    res = t2.find_sections(list_attr, tag_attr, ignore_attr, regex_attr, start, end)
+    #res = t2.find_sections(list_attr, tag_attr, ignore_attr, regex_attr, start, end)
+    res = t2.find_sections(tag_attr, ignore_attr, regex_attr, start, end)
     #pdb.set_trace()
-    assert expected_tuple in list_attr
-    assert expected_len == len(list_attr)
+    assert expected_tuple in res
+    assert expected_len == len(res)
 
-def test_load_full_dict(mocker, sample_sections, sample_subsections, sample_file_contents):
-    # given
-    m1 = mock.Mock()
+def find_sections_mock(*args):
     #pdb.set_trace()
+    return [('INs', 1, 11, '========== INs'), ('projects', 12, 22, '========== projects'), ('calendar', 23, 53, '========== calendar')]
+
+def test_load_full_dict(mocker, capsys, sample_sections, sample_subsections, sample_file_contents):
+    # mocked_rhst = mocker.patch('salt.modules.cmdmod.run', side_effect=['first_value', 'second_value'])
+    # given
+    #pdb.set_trace()
+    m1 = mock.Mock()
+    m1.side_effect=[[('INs', 1, 11, '========== INs'), ('projects', 12, 22, '========== projects'), ('calendar', 23, 53, '========== calendar')] ,[('IN', 4, 8, '    IN::: incoming::: inbound::: ins::'), ('ICEBOX', 9, 13, '    ICEBOX:: (priority V:::)')], [('PJs', 14, 16, 'PJs:: projects:: pj::: pjs::'), ('tech', 17, 25, 'tech:::')], [('01', 26, 30, '    01:  () '), ('09', 31, 37, '    09: (sat)'), ('10', 38, 41, '    10: ()'), ('31', 42, 45, '    31: ()'), ('M12', 46, 49, '    M12:'), ('- Tags', 50, 53, '    - Tags::: tag::: ')]]
     t1 = tklrlib.Tklr('foo_file_name')
-    t1.sections = sample_sections
-    t1.subsections = sample_subsections
-    t1.file_contents = sample_file_contents
     t1.find_sections = m1
+    #t1.sections = sample_sections
+    #t1.subsections = m1
+    t1.file_contents = sample_file_contents
+    #t1.find_sections = lambda *args: sample_sections
     # when:
     res = t1.load_full_dict()
     # then:
@@ -81,10 +89,11 @@ def test_load_full_dict(mocker, sample_sections, sample_subsections, sample_file
     assert '    DONEs:: dones; done::' in t1.dict['09']['contents'] # ensure we grab proper contents
 
     # below, test how we are calling the file_sections method, since that was a problem before
+    # the second [] can be ignored - it's always one. first and 3rd brackets matter. 
     # first we test the first call - the one for major sections and look at what Tag we requested
-    assert m1.mock_calls[0][1][1] == '========== '
-    # then we test the third call ([2]) - to one of the subsections (projects) and look at the regex ([3]) is
-    assert m1.mock_calls[2][1][3] == r'\S'
+    assert m1.mock_calls[0][1][0] == '========== '
+    # then we test the third call (first[2]) - to one of the subsections (projects), and look at what the regex (second[2]) is
+    assert m1.mock_calls[2][1][2] == r'\S'
 
 
 @pytest.mark.parametrize('keyword,expected_res', [('BDEAD:: BRAINDEAD::', True), ('THIS IS SPAM', False)])
