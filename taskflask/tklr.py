@@ -9,14 +9,13 @@ import re
 import pdb
 
 class Tklr():
-    keywords = 'bu'
     def __init__(self, filename):
         self.sections = []
         self.subsections = []
         self.file_contents = []
         self.filename = filename
         self.dict = OrderedDict()
-        self.keywords = [
+        self.dont_match_keywords = [
             'today',
             'DAILY',
             'URGENTs',
@@ -47,8 +46,8 @@ class Tklr():
         }
 
     def match_keyword(self, line):
-        ''' checks if line contains one of the keywords from keyword dict '''
-        for keyword in self.keywords:
+        ''' checks if line contains one of the keywords from the dont_match_keywords dict '''
+        for keyword in self.dont_match_keywords:
             #print('kword: {}, line: {}'.format(keyword, line))
             if keyword in line:
                 #print('SKIP')
@@ -72,13 +71,13 @@ class Tklr():
         tag, ignore_string, regex = major['tag'], major['ignore'], major['regex']
         major_metadata = self.find_sections(tag, ignore_string, regex)
         self.sections = major_metadata
+        print('Major sections: {}'.format(self.sections))
         # compute minor subsections metadata
         for section in self.sections:
             name = section[0]
             minor = self.searchtags[name]
             tag, ignore_string, regex = minor['tag'], minor['ignore'], minor['regex']
             #tag, ignore_string, regex = self.searchtags[name]
-            #pdb.set_trace()
             minor_metadata = self.find_sections(tag, ignore_string, regex, start=section[1], end=section[2])
             major_mod = (section[0], section[1], (minor_metadata[0][1])-1, section[3]) 
             self.subsections.append(major_mod) # also insert major section as subsection so everything gets printed
@@ -123,12 +122,10 @@ class Tklr():
                 section_start = line_counter+1 + start
                 ret_list.append((tag_name, section_start, 0, section_full_name))
         # easiest way to calculate section end is to look at start of next element
-        #pdb.set_trace()
         for count, one_section in enumerate(ret_list):
             try:
                 section_end = ret_list[count+1][1] - 1 # + start
             except IndexError:
-                #pdb.set_trace()
                 ret_list[count] = (ret_list[count][0], ret_list[count][1], line_counter+1 + start, ret_list[count][3])
             else:
                 ret_list[count] = (ret_list[count][0], ret_list[count][1], section_end, ret_list[count][3])
@@ -186,15 +183,17 @@ class Tklr():
 
     def print_section(self, section_name):
         return 'dont use, use get_section instead'
+        '''
         ret = ''
         for line in self.dict[section_name]['contents']:
             ret += line + '\n'
         return ret
+        '''
 
 
     @staticmethod
     def generate_unused_bak_file_name(filename):
-        new_filename = '{}.bak-1'.format(filename)
+        new_filename = '{}.bak'.format(filename)
         return new_filename
 
     @staticmethod
@@ -208,21 +207,33 @@ class Tklr():
             return False
         return True
 
+    def find_len(self):
+        ''' finds line count of the self.dict structure '''
+        count = 0
+        #pdb.set_trace()
+        for k, v in six.iteritems(self.dict):
+            #print(self.get_section(k))
+            count += len(self.get_section(k).split('\n')) - 1
+        return count
+
     def save_file(self):
         #pdb.set_trace()
-        bak_filename = self.generate_unused_bak_file_name(self.filename)
-        if self.copy_file(self.filename, bak_filename):
+        new_len = self.find_len()
+        print('orig line count: {}, new file line count: {}'.format(len(self.file_contents), new_len))
+        if abs(len(self.file_contents) - new_len) > 1:
+            print('old and new files seem different by line counts, not proceeding')
+            return False
 
-            print('saving file: {}'.format(self.filename))
+        bak_filename = self.generate_unused_bak_file_name(self.filename)
+        print('saving file: {}'.format(self.filename))
+        if self.copy_file(self.filename, bak_filename):
             with open(self.filename, 'w') as f:
-                for k, v in six.iteritems(self.dict): #print(k)
-                    #pdb.set_trace()
-                    #print(v['heading'])
-                    #f.write(v['heading']+'\n')
-                    #print(self.get_section(k), end="")
+                for k, v in six.iteritems(self.dict):
                     f.write(self.get_section(k))
+                return True
         else:
             print('backup copy not made, so not saving anything')
+            return False
 
     def __str__(self):
         print('!!! old - may need revisiting')
