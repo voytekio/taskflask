@@ -17,5 +17,5 @@ setup(name='taskflaskapi',
             'console_scripts': ['taskcmd=taskflask.cmdline:main'],
         },
         license = 'BSD',
-        url = 'https://github.com/voytekio/flask_task',
+        url = 'https://github.com/voytekio/taskflask',
 )
