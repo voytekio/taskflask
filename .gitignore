@@ -5,3 +5,4 @@ taskflask/*.bak*
 dist/*
 build/*
 *egg-info*
+.tox

@@ -27,6 +27,7 @@ pipeline {
             steps {
                 sh 'echo ========================'                
                 sh 'echo running Test Stage'
+                sh 'tox'
                 // sh 'tox'
                 // sh 'exit 1'
             }
