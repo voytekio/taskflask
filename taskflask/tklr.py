@@ -9,7 +9,9 @@ import re
 import pdb
 
 class Tklr():
-    def __init__(self, filename):
+    def __init__(self, filename, no_save):
+        self.now = datetime.now()
+        self.no_save = no_save
         self.sections = []
         self.subsections = []
         self.file_contents = []
@@ -65,13 +67,12 @@ class Tklr():
             content of the self.dict dictionary with all subsections
         '''
         # compute major sections metadata
-        #res = self.find_sections(self.sections, tag=self.searchtags['major_sections']['tag'], ignore=self.searchtags['major_sections']['ignore'], regex=self.searchtags['major_sections']['regex'])
         #pdb.set_trace()
         major = self.searchtags['major_sections']
         tag, ignore_string, regex = major['tag'], major['ignore'], major['regex']
-        major_metadata = self.find_sections(tag, ignore_string, regex)
-        self.sections = major_metadata
+        self.sections = self.find_sections(tag, ignore_string, regex)
         print('Major sections: {}'.format(self.sections))
+
         # compute minor subsections metadata
         for section in self.sections:
             name = section[0]
@@ -80,7 +81,8 @@ class Tklr():
             #tag, ignore_string, regex = self.searchtags[name]
             minor_metadata = self.find_sections(tag, ignore_string, regex, start=section[1], end=section[2])
             major_mod = (section[0], section[1], (minor_metadata[0][1])-1, section[3]) 
-            self.subsections.append(major_mod) # also insert major section as subsection so everything gets printed
+            self.subsections.append(major_mod) # also insert major section as subsection
+                # so everything gets included in subsection dir - both major and minor headings
             for one_tuple in minor_metadata:
                 self.subsections.append(one_tuple)
         # store actual contents in dict
@@ -89,16 +91,23 @@ class Tklr():
             self.dict[one_subsection[0]]['heading'] = one_subsection[3]
             self.dict[one_subsection[0]]['contents'] = self.file_contents[one_subsection[1]:one_subsection[2]]
 
-
-    """
-    def load_dict(self):
+    def day_fix(self):
         '''
-        go through all subsection markers and read file contents and put into a dict structure
+        inside calendar major section, for each day as int, fix the day name as string
         '''
-        #pdb.set_trace()
-        for one_subsection in self.subsections:
-            self.dict[one_subsection[0]] = self.file_contents[one_subsection[1]:one_subsection[2]]
-    """
+        # iterate over dict, find only the day sections(regex using the definition?), ignore rest
+        outside_calendar = False
+        for sname, section_value in six.iteritems(self.dict):
+            #print(sname)
+            if re.match(r'\d\d', sname): # ex: match 01 but not M12 or travel
+                try:
+                    replaced_date = datetime.strptime('{}/{}/{}'.format(self.now.month, sname, self.now.year), '%m/%d/%Y')
+                    rep2 = replaced_date.strftime('%a')
+                except ValueError:
+                    rep2 = 'N/A'
+                new_name = '{0}{1}: ({2})'.format(self.searchtags['calendar']['tag'],
+                    sname, rep2)
+                section_value['heading'] = new_name
 
 
     def find_sections(self, tag, ignore_string, regex, start=0, end=None):
@@ -107,6 +116,8 @@ class Tklr():
         start and end locations.
         this only stores metadata about subsections into a list, load_dict func will 
         use this to retrieve data and store actual contents. 
+        RETURN: list of tuples indicating section headers names, starts and ends:
+            ex: [('INs', 1, 54, '========== INs'), ('projects', 55, 1402, '========== projects')]
         '''
         if not self.file_contents:
             self.read_file(self.filename)
@@ -115,7 +126,6 @@ class Tklr():
         ret_list = []
         for line_counter, one_line in enumerate(temp_list):
             if re.match(regex, one_line) and ignore_string not in one_line and not self.match_keyword(one_line):
-                #pdb.set_trace()
                 tag_name = one_line.strip(tag).rstrip('\n')
                 tag_name = tag_name.split(':')[0]
                 section_full_name = one_line
@@ -217,7 +227,12 @@ class Tklr():
         return count
 
     def save_file(self):
-        #pdb.set_trace()
+        if self.no_save:
+            print('no save requested, will print to screen only')
+            print(self.__str__())
+            return
+
+        # check line counts and back out if not equal
         new_len = self.find_len()
         print('orig line count: {}, new file line count: {}'.format(len(self.file_contents), new_len))
         if abs(len(self.file_contents) - new_len) > 1:
@@ -236,13 +251,9 @@ class Tklr():
             return False
 
     def __str__(self):
-        print('!!! old - may need revisiting')
         print_string = ''
-        for one_section in self.sections:
-            print_string += ('Section {}, start: {}, end: {}\n'.format(one_section[0], one_section[1], one_section[2]))
-        for one_subsection in self.subsections:
-            print_string += ('Section {}, start: {}, end: {}\n'.format(one_subsection[0], one_subsection[1], one_subsection[2]))
-        #pdb.set_trace()
+        for k, v in six.iteritems(self.dict):
+            print_string += (self.get_section(k))
         return print_string
 
 

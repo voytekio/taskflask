@@ -1,3 +1,10 @@
+0.1.4:
+    - add --nosave option
+    - add --dayfix option to fix day weekday names
+0.1.3:
+    - pip package creates a script - taskcmd
+0.1.2:
+    - add safety to check line numbers before saving file
 0.1.1:
     - fixed setup.py packaging issues
 0.1.0:

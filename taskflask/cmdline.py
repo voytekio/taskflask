@@ -13,6 +13,8 @@ def parseargs():
     parser.add_argument("-m","--movesection", help="move section's contents from one to another section, -m 'M6-M7'", action = 'store')
     #parser.add_argument("-m","--mode", help="mode-either import or export", required=True, action = 'store')
     parser.add_argument("-t","--today", help="move yesterdays section to today", action = 'store_true')
+    parser.add_argument("-d","--dayfix", help="fix days", action = 'store_true')
+    parser.add_argument("-n","--nosave", help="dont save or backup any files", action = 'store_true')
     # action = 'store' is default (and can even be omitted)
     # action = 'store_true' or 'store_false' are for flags:
     #     if user specifes --execute, then args.execute will evaulate to True; otherwise False
@@ -24,16 +26,9 @@ def run_flask():
 
 def main():
     args = parseargs()
-    #    - if args.execute:
-    #            print "RW"
-    #        else:
-    #            print "RO"
-
     #api.app.run(host= '0.0.0.0', debug=True)
-    #sys.exit(1)
     #pdb.set_trace()
-    tklr = tklrlib.Tklr(args.filename)
-    #tklr.find_major_sections()
+    tklr = tklrlib.Tklr(args.filename, args.nosave)
     tklr.load_full_dict()
     #pdb.set_trace()
     if args.printsection:
@@ -49,7 +44,12 @@ def main():
         print(tklr.print_today())
         tklr.move_today()
         print(tklr.print_today())
+        if not args.nosave:
+            tklr.save_file()
+    if args.dayfix:
+        tklr.day_fix()
         tklr.save_file()
+
     #tklr.move_section('09', '10')
     #print(tklr.get_section('M9'),end="")
     #tklr.print_all()
