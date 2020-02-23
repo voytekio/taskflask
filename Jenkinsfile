@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent docker
     environment {
         TEST_VAR1 = 'true'
         TEST_VAR2 = 'sqlite'
