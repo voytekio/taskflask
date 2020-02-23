@@ -41,11 +41,9 @@ def main():
         print(tklr.get_section(from_section))
         print(tklr.get_section(to_section))
     if args.today:
-        print(tklr.print_today())
         tklr.move_today()
         print(tklr.print_today())
-        if not args.nosave:
-            tklr.save_file()
+        tklr.save_file()
     if args.dayfix:
         tklr.day_fix()
         tklr.save_file()
