@@ -26,10 +26,14 @@ pipeline {
         stage('test') {
             steps {
                 sh 'echo ========================'                
-                sh 'echo running Test Stage'
+                sh 'echo running Test Stage, Unit-Tests step'
                 sh 'tox'
-                // sh 'tox'
                 // sh 'exit 1'
+            }
+            steps {
+                sh 'echo ========================'                
+                sh 'echo running Test Stage, Integration-Tests step'
+                sh 'tox -e integration'
             }
         }        
         stage('deploy') {
