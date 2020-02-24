@@ -38,7 +38,7 @@ def my_fixture():
     cr_id = run_cmd( "docker run -i -d -v {}:/task ubuntu:18.04".format(os.path.join(cwd, 'taskflask') ))
     cr_id = cr_id.strip()
     print('cr_id: {}'.format(cr_id))
-    print(run_cmd( "docker exec -it {} ls -l /task".format(cr_id)))
+    print(run_cmd( "docker exec -i {} ls -l /task".format(cr_id)))
     yield cr_id.strip()
 
     print('\nFXITURE TEARDOWN. destroying CR with ID of {}'.format(cr_id))
