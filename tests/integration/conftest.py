@@ -3,6 +3,7 @@ import subprocess
 import shlex
 import pdb
 import os
+import time
 
 def run_cmd(cmdname, ignore_errors=False):
     import subprocess
@@ -42,5 +43,6 @@ def my_fixture():
     yield cr_id.strip()
 
     print('\nFXITURE TEARDOWN. destroying CR with ID of {}'.format(cr_id))
+    time.sleep(30)
     run_cmd( "docker rm -f {}".format(cr_id))
 
