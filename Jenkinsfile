@@ -23,13 +23,15 @@ pipeline {
                 sh 'groups'
             }
         }
-        stage('test') {
+        stage('test-unit') {
             steps {
                 sh 'echo ========================'                
                 sh 'echo running Test Stage, Unit-Tests step'
                 sh 'tox'
                 // sh 'exit 1'
             }
+        }
+        stage('test-integration') {
             steps {
                 sh 'echo ========================'                
                 sh 'echo running Test Stage, Integration-Tests step'
