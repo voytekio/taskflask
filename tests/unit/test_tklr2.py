@@ -5,7 +5,6 @@ import mock
 #pdb.set_trace()
 import taskflask.tklr as tklr_lib
 
-
 def test_find_sections():
     # given
     tklr_obj = tklr_lib.Tklr(filename='tests/assets/sections.txt', no_save=True, debug=False)
@@ -31,9 +30,10 @@ def test_load_full_dict():
         'regex': r'    \S',
     }
     # when
-    ret = tklr_obj.load_full_dict()
+    tklr_obj.load_full_dict()
     # then
     assert len(tklr_obj.dict) == 4 # we have 2 major and 2 minor sections
+    assert len(tklr_obj.subsections) == 4 # same as above but in the subsections list
     assert 'walmart' in tklr_obj.dict.keys() # we have a walmart minor section
     assert 'amazon' not in tklr_obj.dict.keys() # amazon should not be a heading
         # since it doesn't match the filter
@@ -41,4 +41,14 @@ def test_load_full_dict():
         #amazon subsection - bar, baz and last line 16
 
 
+def test_load_into_dict():
+    # given
+    tklr_obj = tklr_lib.Tklr(filename='tests/assets/sections.txt', no_save=True, debug=False)
+    tklr_obj.subsections.append(tklr_lib.Section_Tuple_Class(name='cart', start=13, end=16, full_name='    cart:'))
+    # when
+    tklr_obj.load_into_dict()
+    # then
+    assert len(tklr_obj.dict) == 1
+    assert 'cart:' in tklr_obj.dict['cart']['heading']
+    assert '        - last line 16' in tklr_obj.dict['cart']['contents']
 

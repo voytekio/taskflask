@@ -1,5 +1,5 @@
 from __future__ import print_function
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from datetime import datetime, timedelta
 from dateutil import tz
 from shutil import copyfile, copy
@@ -9,6 +9,8 @@ import re
 
 import pdb
 
+Section_Tuple_Class = namedtuple('Section_Tuple', 'name, start, end, full_name')
+
 class Tklr():
     def __init__(self, filename, no_save, debug=False):
         self.now = datetime.now()
@@ -16,8 +18,10 @@ class Tklr():
         self.sections = []
         self.subsections = []
         self.debug = debug
-        self.file_contents = []
         self.filename = filename
+        self.file_contents = []
+        if not self.file_contents:
+            self.read_file(self.filename)
         self.dict = OrderedDict()
         self.dont_match_keywords = [
             'today',
@@ -67,7 +71,7 @@ class Tklr():
     def load_full_dict(self):
         ''' uses metadata from find_sections for both major and minor subsections and populates
             content of the self.dict dictionary with all subsections
-            INTPUT: ?
+            INTPUT: None? but uses self.searchtags to divide into sections and then subsections
             OUTPUT: None? but output artifact is full dict
         '''
         # compute major sections metadata
@@ -79,22 +83,37 @@ class Tklr():
 
         # compute minor subsections metadata
         for section in self.sections:
-            name = section[0]
+            #pdb.set_trace()
+            name = section.name
             minor = self.searchtags[name]
             tag, ignore_string, regex = minor['tag'], minor['ignore'], minor['regex']
-            #tag, ignore_string, regex = self.searchtags[name]
-            minor_metadata = self.find_sections(tag, ignore_string, regex, start=section[1], end=section[2])
-            major_mod = (section[0], section[1], (minor_metadata[0][1])-1, section[3]) 
-            self.subsections.append(major_mod) # also insert major section as subsection
-                # so everything gets included in subsection dir - both major and minor headings
-            for one_tuple in minor_metadata:
+            minor_metadata_list = self.find_sections(tag, ignore_string, regex, start=section.start, end=section.end)
+
+            # also insert major section (header only) as subsection
+            # so everything gets included in subsection list - both major and minor headings
+            # otherwise, we will not print major headers
+            major_header = Section_Tuple_Class(section.name, section.start, (minor_metadata_list[0].start)-1, section.full_name )
+            self.subsections.append(major_header)
+
+            for one_tuple in minor_metadata_list:
                 self.subsections.append(one_tuple)
-        # store actual contents in dict
+        # print all subsections now:
+        for section in self.subsections:
+            print(section)
+
+        self.load_into_dict()
+
+    def load_into_dict(self):
+        '''
+        split the actual contents of the file by subsections and store in dict
+        INPUT: None, works mostly with the self.subsections list
+        OUTPUT: None, populates the self.dict structure
+        '''
         pdb.set_trace() if self.debug else None
         for one_subsection in self.subsections:
-            self.dict[one_subsection[0]] = {}
-            self.dict[one_subsection[0]]['heading'] = one_subsection[3]
-            self.dict[one_subsection[0]]['contents'] = self.file_contents[one_subsection[1]:one_subsection[2]]
+            self.dict[one_subsection.name] = {}
+            self.dict[one_subsection.name]['heading'] = one_subsection.full_name
+            self.dict[one_subsection.name]['contents'] = self.file_contents[one_subsection.start:one_subsection.end]
 
 
     def find_sections(self, tag, ignore_string, regex, start=0, end=None):
@@ -108,8 +127,6 @@ class Tklr():
         RETURN: list of tuples indicating section headers names, starts and ends:
             ex: [('INs', 1, 54, '========== INs'), ('projects', 55, 1402, '========== projects')]
         '''
-        if not self.file_contents:
-            self.read_file(self.filename)
         temp_list = []
         temp_list = self.file_contents[start:] if not end else self.file_contents[start:end]
         ret_list = []
@@ -118,18 +135,23 @@ class Tklr():
                 pdb.set_trace() if self.debug else None
                 tag_name = one_line.strip(tag).rstrip('\n')
                 tag_name = tag_name.split(':')[0]
-                section_full_name = one_line
-                section_start = line_counter+1 + start
-                ret_list.append((tag_name, section_start, 0, section_full_name))
+                #section_full_name = one_line
+                #section_start = line_counter+1 + start
+                section = Section_Tuple_Class(name=tag_name, start=line_counter+1+start,
+                    end=0, full_name = one_line)
+                #ret_list.append((tag_name, section_start, 0, section_full_name))
+                ret_list.append(section)
         # easiest way to calculate section end is to look at start of next element
-        pdb.set_trace() if self.debug else None
+        #pdb.set_trace()# if self.debug else None
         for count, one_section in enumerate(ret_list):
             try:
-                section_end = ret_list[count+1][1] - 1 # + start
+                section_end = ret_list[count+1].start - 1 #one line before start of next section
             except IndexError:
-                ret_list[count] = (ret_list[count][0], ret_list[count][1], line_counter+1 + start, ret_list[count][3])
+                ret_list[count] = Section_Tuple_Class(name=ret_list[count].name, start=ret_list[count].start, end=line_counter+1 + start, full_name=ret_list[count].full_name)
+                #ret_list[count] = (ret_list[count].name, ret_list[count].start, line_counter+1 + start, ret_list[count].full_name)
             else:
-                ret_list[count] = (ret_list[count][0], ret_list[count][1], section_end, ret_list[count][3])
+                ret_list[count] = Section_Tuple_Class(name=ret_list[count].name, start=ret_list[count].start, end=section_end, full_name=ret_list[count].full_name)
+                #ret_list[count] = (ret_list[count].name, ret_list[count].start, section_end, ret_list[count].full_name)
         return ret_list
 
 
