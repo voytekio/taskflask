@@ -1,0 +1,16 @@
+========== GROCERY_LIST_LINE_1
+==
+    ==
+    walmart:
+        milk:
+    == e.of walmart, line_6
+========== ONLINE_SHOPPING_LIST_LINE_7:
+online:: internet::
+
+=====
+amazon:::
+    ==
+    cart:
+        - bar
+        - baz
+        - last line 16

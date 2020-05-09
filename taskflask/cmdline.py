@@ -14,7 +14,8 @@ def parseargs():
     #parser.add_argument("-m","--mode", help="mode-either import or export", required=True, action = 'store')
     parser.add_argument("-t","--today", help="move yesterdays section to today", action = 'store_true')
     parser.add_argument("-w","--html", help="export to html", action = 'store_true')
-    parser.add_argument("-d","--dayfix", help="fix days", action = 'store_true')
+    parser.add_argument("-a","--dayfix", help="fix days", action = 'store_true')
+    parser.add_argument("-d","--debug", help="run in debugger", action = 'store_true')
     parser.add_argument("-n","--nosave", help="dont save or backup any files", action = 'store_true')
     # action = 'store' is default (and can even be omitted)
     # action = 'store_true' or 'store_false' are for flags:
@@ -28,10 +29,10 @@ def run_flask():
 def main():
     args = parseargs()
     #api.app.run(host= '0.0.0.0', debug=True)
-    #pdb.set_trace()
-    tklr = tklrlib.Tklr(args.filename, args.nosave)
+    if args.debug:
+        pdb.set_trace()
+    tklr = tklrlib.Tklr(args.filename, args.nosave, args.debug)
     tklr.load_full_dict()
-    #pdb.set_trace()
     if args.printsection:
         print(tklr.get_section(args.printsection),end="")
     if args.movesection:

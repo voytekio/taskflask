@@ -10,11 +10,12 @@ import re
 import pdb
 
 class Tklr():
-    def __init__(self, filename, no_save):
+    def __init__(self, filename, no_save, debug=False):
         self.now = datetime.now()
         self.no_save = no_save
         self.sections = []
         self.subsections = []
+        self.debug = debug
         self.file_contents = []
         self.filename = filename
         self.dict = OrderedDict()
@@ -66,9 +67,11 @@ class Tklr():
     def load_full_dict(self):
         ''' uses metadata from find_sections for both major and minor subsections and populates
             content of the self.dict dictionary with all subsections
+            INTPUT: ?
+            OUTPUT: None? but output artifact is full dict
         '''
         # compute major sections metadata
-        #pdb.set_trace()
+        pdb.set_trace() if self.debug else None
         major = self.searchtags['major_sections']
         tag, ignore_string, regex = major['tag'], major['ignore'], major['regex']
         self.sections = self.find_sections(tag, ignore_string, regex)
@@ -87,6 +90,7 @@ class Tklr():
             for one_tuple in minor_metadata:
                 self.subsections.append(one_tuple)
         # store actual contents in dict
+        pdb.set_trace() if self.debug else None
         for one_subsection in self.subsections:
             self.dict[one_subsection[0]] = {}
             self.dict[one_subsection[0]]['heading'] = one_subsection[3]
@@ -95,10 +99,12 @@ class Tklr():
 
     def find_sections(self, tag, ignore_string, regex, start=0, end=None):
         '''
-        parse input - using magic tags, discover subsections and note their names,
-        start and end locations.
-        this only stores metadata about subsections into a list, load_dict func will 
-        use this to retrieve data and store actual contents. 
+        SUMMARY: parse input - using magic tags, discover subsections and note their names,
+            start and end locations. This only stores metadata about subsections into a
+            list, load_dict func will use this to retrieve data and store actual contents.
+        INPUT: tag ('========== '), ignore_string ('e.of'), regex ('========== ')
+            - not sure if tag and regex are both needed, maybe only regex
+            - same for ignore_string since the func seems to call match_keyword
         RETURN: list of tuples indicating section headers names, starts and ends:
             ex: [('INs', 1, 54, '========== INs'), ('projects', 55, 1402, '========== projects')]
         '''
@@ -109,12 +115,14 @@ class Tklr():
         ret_list = []
         for line_counter, one_line in enumerate(temp_list):
             if re.match(regex, one_line) and ignore_string not in one_line and not self.match_keyword(one_line):
+                pdb.set_trace() if self.debug else None
                 tag_name = one_line.strip(tag).rstrip('\n')
                 tag_name = tag_name.split(':')[0]
                 section_full_name = one_line
                 section_start = line_counter+1 + start
                 ret_list.append((tag_name, section_start, 0, section_full_name))
         # easiest way to calculate section end is to look at start of next element
+        pdb.set_trace() if self.debug else None
         for count, one_section in enumerate(ret_list):
             try:
                 section_end = ret_list[count+1][1] - 1 # + start
