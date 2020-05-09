@@ -135,11 +135,8 @@ class Tklr():
                 pdb.set_trace() if self.debug else None
                 tag_name = one_line.strip(tag).rstrip('\n')
                 tag_name = tag_name.split(':')[0]
-                #section_full_name = one_line
-                #section_start = line_counter+1 + start
                 section = Section_Tuple_Class(name=tag_name, start=line_counter+1+start,
                     end=0, full_name = one_line)
-                #ret_list.append((tag_name, section_start, 0, section_full_name))
                 ret_list.append(section)
         # easiest way to calculate section end is to look at start of next element
         #pdb.set_trace()# if self.debug else None
@@ -147,11 +144,9 @@ class Tklr():
             try:
                 section_end = ret_list[count+1].start - 1 #one line before start of next section
             except IndexError:
-                ret_list[count] = Section_Tuple_Class(name=ret_list[count].name, start=ret_list[count].start, end=line_counter+1 + start, full_name=ret_list[count].full_name)
-                #ret_list[count] = (ret_list[count].name, ret_list[count].start, line_counter+1 + start, ret_list[count].full_name)
+                ret_list[count] = Section_Tuple_Class(name=one_section.name, start=one_section.start, end=line_counter+1 + start, full_name=one_section.full_name)
             else:
-                ret_list[count] = Section_Tuple_Class(name=ret_list[count].name, start=ret_list[count].start, end=section_end, full_name=ret_list[count].full_name)
-                #ret_list[count] = (ret_list[count].name, ret_list[count].start, section_end, ret_list[count].full_name)
+                ret_list[count] = Section_Tuple_Class(name=one_section.name, start=one_section.start, end=section_end, full_name=one_section.full_name)
         return ret_list
 
 
