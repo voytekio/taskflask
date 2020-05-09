@@ -92,24 +92,6 @@ class Tklr():
             self.dict[one_subsection[0]]['heading'] = one_subsection[3]
             self.dict[one_subsection[0]]['contents'] = self.file_contents[one_subsection[1]:one_subsection[2]]
 
-    def day_fix(self):
-        '''
-        inside calendar major section, for each day as int, fix the day name as string
-        '''
-        # iterate over dict, find only the day sections(regex using the definition?), ignore rest
-        outside_calendar = False
-        for sname, section_value in six.iteritems(self.dict):
-            #print(sname)
-            if re.match(r'\d\d', sname): # ex: match 01 but not M12 or travel
-                try:
-                    replaced_date = datetime.strptime('{}/{}/{}'.format(self.now.month, sname, self.now.year), '%m/%d/%Y')
-                    rep2 = replaced_date.strftime('%a')
-                except ValueError:
-                    rep2 = 'N/A'
-                new_name = '{0}{1}: ({2})'.format(self.searchtags['calendar']['tag'],
-                    sname, rep2)
-                section_value['heading'] = new_name
-
 
     def find_sections(self, tag, ignore_string, regex, start=0, end=None):
         '''
@@ -141,6 +123,25 @@ class Tklr():
             else:
                 ret_list[count] = (ret_list[count][0], ret_list[count][1], section_end, ret_list[count][3])
         return ret_list
+
+
+    def day_fix(self):
+        '''
+        inside calendar major section, for each day as int, fix the day name as string
+        '''
+        # iterate over dict, find only the day sections(regex using the definition?), ignore rest
+        outside_calendar = False
+        for sname, section_value in six.iteritems(self.dict):
+            #print(sname)
+            if re.match(r'\d\d', sname): # ex: match 01 but not M12 or travel
+                try:
+                    replaced_date = datetime.strptime('{}/{}/{}'.format(self.now.month, sname, self.now.year), '%m/%d/%Y')
+                    rep2 = replaced_date.strftime('%a')
+                except ValueError:
+                    rep2 = 'N/A'
+                new_name = '{0}{1}: ({2})'.format(self.searchtags['calendar']['tag'],
+                    sname, rep2)
+                section_value['heading'] = new_name
 
     def print_today(self):
         from_zone = tz.gettz('UTC')

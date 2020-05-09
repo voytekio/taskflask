@@ -1,0 +1,16 @@
+    ==
+    01: (Fri)
+        - buy groceries
+            - milk
+            - soda
+    02: (Sat)
+
+    today:: tdy:: tday:: tdy; tday; tddy:
+    ==
+    DAILY:
+        - eat fruit
+    URGENTs:
+        - fix car
+        - watch movie
+    03: (Sun)
+        - visit friend
