@@ -13,6 +13,7 @@ def parseargs():
     parser.add_argument("-m","--movesection", help="move section's contents from one to another section, -m 'M6-M7'", action = 'store')
     #parser.add_argument("-m","--mode", help="mode-either import or export", required=True, action = 'store')
     parser.add_argument("-t","--today", help="move yesterdays section to today", action = 'store_true')
+    parser.add_argument("-w","--html", help="export to html", action = 'store_true')
     parser.add_argument("-d","--dayfix", help="fix days", action = 'store_true')
     parser.add_argument("-n","--nosave", help="dont save or backup any files", action = 'store_true')
     # action = 'store' is default (and can even be omitted)
@@ -44,9 +45,9 @@ def main():
         tklr.move_today()
         print(tklr.print_today())
         tklr.save_file()
-    if args.dayfix:
-        tklr.day_fix()
-        tklr.save_file()
+    if args.html:
+        tklr.make_html()
+        tklr.add_headings()
 
     #tklr.move_section('09', '10')
     #print(tklr.get_section('M9'),end="")

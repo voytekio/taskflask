@@ -3,6 +3,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 from dateutil import tz
 from shutil import copyfile, copy
+import fileinput
 import six
 import re
 
@@ -183,7 +184,12 @@ class Tklr():
         self.dict[section_to]['contents'] = buffer_space
         self.dict[section_from]['contents'] = ''
 
-    def get_section(self, section_name):
+    def get_section(self, section_name, debug=True):
+        if debug:
+            minors = ''
+            for k, v in six.iteritems(self.dict):
+                minors = minors + k + ','
+            print('Minor sections: ({})'.format(minors))
         ret = ''
         #pdb.set_trace()
         ret = self.dict[section_name]['heading'] + '\n'
@@ -255,5 +261,71 @@ class Tklr():
         for k, v in six.iteritems(self.dict):
             print_string += (self.get_section(k))
         return print_string
+
+    @staticmethod
+    def generate_html_filename(filename):
+        #pdb.set_trace()
+        new_filename = '{}.html'.format(filename)
+        return new_filename
+
+
+    @staticmethod
+    def count_spaces(string):
+        #pdb.set_trace()
+        for counter,char in enumerate(string):
+            if char != " ":
+                return counter
+        return 0
+
+    def make_html(self):
+        html_filename = self.generate_html_filename(self.filename)
+        print('saving file: {}'.format(html_filename))
+        #pdb.set_trace()
+        with open(html_filename, 'w') as f:
+            for oneline in self.file_contents:
+                spaces = self.count_spaces(oneline)*"&nbsp"
+                f.write("{}{}{}".format(spaces, oneline.lstrip() ,' <br>\n'))
+                #for k, v in six.iteritems(self.dict):
+                #    f.write(self.get_section(k))
+            return True
+
+    def add_headings(self):
+        ''' finds section starts and replaces it with html h2 tag '''
+        majors = []
+        majors = self.sections
+        html_filename = self.generate_html_filename(self.filename)
+        html_header = '<html>\n<title>foo_title</title>\n<body>\n'
+        html_footer = '</body></html>\n'
+
+        counter2 = 0
+        section_start = majors[counter2][1]
+        section_name = majors[counter2][0]
+        #pdb.set_trace()
+        #for line in fileintpue.FileInput('foo.html'):
+        for counter, line in enumerate(fileinput.FileInput(html_filename, inplace=1)):
+            if counter == 0:
+                print(html_header)
+                print(self.add_html_toc())
+            if counter+1 == section_start:
+                print('<h2 id="{}">{}</h2>'.format(section_name, line))
+                counter2 = counter2 + 1
+                try:
+                    section_start = majors[counter2][1]
+                    section_name = majors[counter2][0]
+                except IndexError:
+                    pass
+            else:
+                print(line)
+        with open(html_filename, 'a') as f:
+            f.write(html_footer)
+
+    def add_html_toc(self):
+        ''' adds Table of Contents '''
+        ret_string = '<h3>Contents</h3>\n<ol>\n'
+        for one_major in self.sections:
+            section_name = one_major[0]
+            ret_string += '  <li><a href="#{0}">{0}</a></li>\n'.format(section_name)
+        ret_string += '</ol>'
+        return ret_string
 
 
