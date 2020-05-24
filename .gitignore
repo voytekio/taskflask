@@ -1,7 +1,7 @@
 *.pyc
 *.swp
 taskflask/*.txt
-taskflask/*.bak*
+*.bak*
 dist/*
 build/*
 *egg-info*

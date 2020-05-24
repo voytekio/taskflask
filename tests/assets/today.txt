@@ -1,8 +1,8 @@
 ========== calendar::: cal:::
 
-    01: 
+    23: (Sat)
         - item01
-    02:
+    24: (Sat)
         - item02
-    03:
+    03: (Sat)
         - item03
