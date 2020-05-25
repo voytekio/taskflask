@@ -210,7 +210,7 @@ class Tklr():
         self.dict[section_to]['contents'] = buffer_space
         self.dict[section_from]['contents'] = ''
 
-    def get_section(self, section_name, debug=True):
+    def get_section(self, section_name, debug=False):
         if debug:
             minors = ''
             for k, v in six.iteritems(self.dict):
