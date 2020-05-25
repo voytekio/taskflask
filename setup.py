@@ -1,12 +1,12 @@
 from setuptools import setup
 
 setup(name='taskflaskapi',
-        version = '0.1.4',
+        version = '0.1.5',
         description = 'tasks app with api in flask',
         author = 'Voytek Krudysz',
         author_email = 'voytek@voytek.io',
+        package_dir={'taskflask': 'src'},
         packages = ['taskflask'],
-        #package_dir={'taskflask': 'src'},
         #data_files=[('', ['src/four.vvv'])],
 		install_requires=[
 		#	'Flask',
