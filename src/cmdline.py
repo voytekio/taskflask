@@ -46,6 +46,9 @@ def main():
         tklr.move_today()
         print(tklr.print_today())
         tklr.save_file()
+    if args.dayfix:
+        tklr.day_fix()
+        tklr.save_file()
     if args.html:
         tklr.make_html()
         tklr.add_headings()
