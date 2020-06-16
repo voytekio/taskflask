@@ -1,3 +1,9 @@
+0.1.6:
+    - fix broken monthly days
+    - add integration test for it
+0.1.5:
+    - add integration tests
+    - refactor tklr libs
 0.1.4:
     - add --nosave option
     - add --dayfix option to fix day weekday names

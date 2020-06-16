@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='taskflaskapi',
-        version = '0.1.5',
+        version = '0.1.6',
         description = 'tasks app with api in flask',
         author = 'Voytek Krudysz',
         author_email = 'voytek@voytek.io',

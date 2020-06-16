@@ -8,6 +8,7 @@ from subprocess import check_output, CalledProcessError
 from datetime import datetime, timedelta
 import pytest
 
+
 def run_cmd(cmd):
     cmd_plus = shlex.split(cmd)
     try:
@@ -18,6 +19,7 @@ def run_cmd(cmd):
     except OSError as e:
         return 'OSError while running cmd. error is: {}'.format(e.strerror)
     return std_out
+
 
 @pytest.fixture()
 def copy_asset_files():
@@ -42,6 +44,23 @@ def copy_asset_files():
             print('ERROR deleting file {}'.format(dst))
             raise
 
+@pytest.fixture(scope='module')
+def simple_dates():
+    from_zone = tz.gettz('UTC')
+    to_zone = tz.gettz('America/New_York')
+
+    today = datetime.now()
+    today = today.replace(tzinfo=from_zone)
+    today_local = today.astimezone(to_zone)
+    yesterday = today - timedelta(hours=24)
+    yesterday = yesterday.replace(tzinfo=from_zone)
+    yesterday_local = yesterday.astimezone(to_zone)
+    tomorrow = today + timedelta(hours=24)
+    tomorrow = tomorrow.replace(tzinfo=from_zone)
+    tomorrow_local = tomorrow.astimezone(to_zone)
+    yield {'today': today_local, 'yesterday': yesterday_local, 'tomorrow': tomorrow_local}
+
+
 def test_it_installs():
     # given
     # when
@@ -58,21 +77,44 @@ def test_help_menu():
     # then
     assert output_tag in res
 
-def test_move_today(copy_asset_files):
+def test_fix_days(copy_asset_files, simple_dates):
+    # given
+    # copy of the asset file using the copy fixture
+    today_sample_file = os.path.join(copy_asset_files, 'today.txt.test')
+
+    # when
+    #pdb.set_trace()
+    std_out = run_cmd('taskcmd -f {} -a'.format(today_sample_file))
+    print('==================== start_normal_cmd_output: ====================\n')
+    print(std_out)
+    print('==================== end_normal_cmd_output: ====================\n')
+
+    # then
+    # read file and look for signs of day names in parenthesis being adjusted
+    with open(today_sample_file) as f:
+        whole_file = f.read()
+        file_lines = whole_file.split('\n')
+    line_today = 'today not found'
+    # we need another day besides today since the test file has Saturday put in so the test could accidentally
+    # work if it was being run on Saturday. Having another day (yesterday or tomorrow) will ensure tests are reliable
+    otherday = simple_dates['tomorrow'] if simple_dates['tomorrow'].strftime('%m') == simple_dates['today'].strftime('%m') else simple_dates['yesterday']
+    # we pick tomorrow always unless tomorrow belongs to another month which would screw everything up so in that case we pick yesteday
+    #pdb.set_trace()
+    for counter, line in enumerate(file_lines):
+        if '{}:'.format(simple_dates['today'].strftime('%d')) in line:
+            line_today = line
+        if '{}:'.format(otherday.strftime('%d')) in line:
+            line_otherday = line
+    assert simple_dates['today'].strftime('%a') in line_today
+    assert otherday.strftime('%a') in line_otherday
+
+#@pytest.mark.skip(reason='temporary for perf')
+def test_move_today(copy_asset_files, simple_dates):
     #pdb.set_trace()
 
     # given
     # copy of the asset file using the copy fixture
-    # and get today and yestrday as day:
     today_sample_file = os.path.join(copy_asset_files, 'today.txt.test')
-    from_zone = tz.gettz('UTC')
-    to_zone = tz.gettz('America/New_York')
-    today = datetime.now()
-    yesterday = today - timedelta(hours=24)
-    today = today.replace(tzinfo=from_zone)
-    yesterday = yesterday.replace(tzinfo=from_zone)
-    today_local = today.astimezone(to_zone)
-    yesterday_local = yesterday.astimezone(to_zone)
 
     # when
     #pdb.set_trace()
@@ -88,11 +130,10 @@ def test_move_today(copy_asset_files):
         whole_file = f.read()
         file_lines = whole_file.split('\n')
     for counter, line in enumerate(file_lines):
-        if 'item{}'.format(today_local.strftime('%d')) in line:
+        if 'item{}'.format(simple_dates['today'].strftime('%d')) in line:
             item_today_index = counter
-        elif 'item{}'.format(yesterday_local.strftime('%d')) in line:
+        elif 'item{}'.format(simple_dates['yesterday'].strftime('%d')) in line:
             item_yesterday_index = counter
     assert item_yesterday_index - item_today_index == 1 # item from today
     #and yesterdy are next to one another
-    #assert 'nope' in 'finish integration test by mocking date with freezegun mod'
 
