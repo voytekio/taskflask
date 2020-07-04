@@ -150,7 +150,7 @@ def test_move_today_by_2_days(copy_asset_files, simple_dates):
 
     # when
     #pdb.set_trace()
-    std_out = run_cmd('taskcmd -f {} -t'.format(today_sample_file))
+    std_out = run_cmd('taskcmd -f {} -t -c 2'.format(today_sample_file))
     print('==================== start_normal_cmd_output: ====================\n')
     print(std_out)
     print('==================== end_normal_cmd_output: ====================\n')
