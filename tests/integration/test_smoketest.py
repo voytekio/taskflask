@@ -55,13 +55,16 @@ def simple_dates():
     yesterday = today - timedelta(hours=24)
     yesterday = yesterday.replace(tzinfo=from_zone)
     yesterday_local = yesterday.astimezone(to_zone)
+    day_before_yesterday = today - timedelta(hours=48)
+    day_before_yesterday = day_before_yesterday.replace(tzinfo=from_zone)
+    day_before_yesterday_local = day_before_yesterday.astimezone(to_zone)
     tomorrow = today + timedelta(hours=24)
     tomorrow = tomorrow.replace(tzinfo=from_zone)
     tomorrow_local = tomorrow.astimezone(to_zone)
-    yield {'today': today_local, 'yesterday': yesterday_local, 'tomorrow': tomorrow_local}
+    yield {'today': today_local, 'yesterday': yesterday_local, 'tomorrow': tomorrow_local, 'day_before_yesterday': day_before_yesterday_local}
 
 
-def test_it_installs():
+def test_it_installed():
     # given
     # when
     res = run_cmd('pip list')
@@ -100,6 +103,7 @@ def test_fix_days(copy_asset_files, simple_dates):
     otherday = simple_dates['tomorrow'] if simple_dates['tomorrow'].strftime('%m') == simple_dates['today'].strftime('%m') else simple_dates['yesterday']
     # we pick tomorrow always unless tomorrow belongs to another month which would screw everything up so in that case we pick yesteday
     #pdb.set_trace()
+    # %a - 3letter weekday (Sat), %d-day-of-month (15)
     for counter, line in enumerate(file_lines):
         if '{}:'.format(simple_dates['today'].strftime('%d')) in line:
             line_today = line
@@ -137,3 +141,35 @@ def test_move_today(copy_asset_files, simple_dates):
     assert item_yesterday_index - item_today_index == 1 # item from today
     #and yesterdy are next to one another
 
+def test_move_today_by_2_days(copy_asset_files, simple_dates):
+    #pdb.set_trace()
+
+    # given
+    # copy of the asset file using the copy fixture
+    today_sample_file = os.path.join(copy_asset_files, 'today.txt.test')
+
+    # when
+    #pdb.set_trace()
+    std_out = run_cmd('taskcmd -f {} -t'.format(today_sample_file))
+    print('==================== start_normal_cmd_output: ====================\n')
+    print(std_out)
+    print('==================== end_normal_cmd_output: ====================\n')
+
+    # then
+    #pdb.set_trace()
+    # read file and look for signs of moved day
+    with open(today_sample_file) as f:
+        whole_file = f.read()
+        file_lines = whole_file.split('\n')
+    for counter, line in enumerate(file_lines):
+        if 'item{}'.format(simple_dates['today'].strftime('%d')) in line:
+            item_today_index = counter
+        elif 'item{}'.format(simple_dates['yesterday'].strftime('%d')) in line:
+            item_yesterday_index = counter
+        elif 'item{}'.format(simple_dates['day_before_yesterday'].strftime('%d')) in line:
+            item_day_before_yesterday_index = counter
+    assert item_yesterday_index - item_today_index == 1 # item from today
+    #and yesterdy are next to one another
+    assert item_day_before_yesterday_index - item_today_index == 2 # item from today
+    #and day_before_yesterday are almost next to one another save for the item_yesterday
+    # that's between them
