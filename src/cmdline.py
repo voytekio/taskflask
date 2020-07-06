@@ -17,6 +17,7 @@ def parseargs():
     parser.add_argument("-a","--dayfix", help="fix days", action = 'store_true')
     parser.add_argument("-d","--debug", help="run in debugger", action = 'store_true')
     parser.add_argument("-n","--nosave", help="dont save or backup any files", action = 'store_true')
+    parser.add_argument("-c","--daycount", help="use with -t, how many days to go back to", action = 'store', default = '1')
     # action = 'store' is default (and can even be omitted)
     # action = 'store_true' or 'store_false' are for flags:
     #     if user specifes --execute, then args.execute will evaulate to True; otherwise False
@@ -43,7 +44,7 @@ def main():
         print(tklr.get_section(from_section))
         print(tklr.get_section(to_section))
     if args.today:
-        tklr.move_today()
+        tklr.move_today(args.daycount)
         print(tklr.print_today())
         tklr.save_file()
     if args.dayfix:

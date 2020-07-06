@@ -177,7 +177,7 @@ class Tklr():
         return self.get_section(today_local.strftime('%d'))
 
 
-    def move_today(self):
+    def move_today(self, day_count):
         #day = figure_day():
         # date shananigans
         from_zone = tz.gettz('UTC')

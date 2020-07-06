@@ -5,6 +5,14 @@ import mock
 #pdb.set_trace()
 import taskflask.tklr as tklr_lib
 
+def test_move_today():
+    # given
+    tklr_obj = tklr_lib.Tklr(filename='tests/assets/sections.txt', no_save=True, debug=False)
+    # when
+    #ret = tklr_obj.find_sections(tag = '========== ', ignore_string = 'e.of', regex = '========== ', start = 0, end=None)
+    # then
+    assert None == 'finish test_move_today unit test'
+
 def test_find_sections():
     # given
     tklr_obj = tklr_lib.Tklr(filename='tests/assets/sections.txt', no_save=True, debug=False)
