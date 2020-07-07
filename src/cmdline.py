@@ -44,7 +44,7 @@ def main():
         print(tklr.get_section(from_section))
         print(tklr.get_section(to_section))
     if args.today:
-        tklr.move_today(args.daycount)
+        tklr.move_today(int(args.daycount))
         print(tklr.print_today())
         tklr.save_file()
     if args.dayfix:

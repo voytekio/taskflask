@@ -187,18 +187,21 @@ class Tklr():
         #to_zone = tz.tzlocal()
         #pdb.set_trace()
         today = datetime.now()
-        yesterday = today - timedelta(hours=24)
-        # Tell the datetime object that it's in UTC time zone since 
-        # datetime objects are 'naive' by default
-        today = today.replace(tzinfo=from_zone)
-        yesterday = yesterday.replace(tzinfo=from_zone)
-        #utc = utc.replace(tzinfo=from_zone)
-        # Convert time zone
-        today_local = today.astimezone(to_zone)
-        yesterday_local = yesterday.astimezone(to_zone)
 
-        print('Moving from {} to {}.'.format(yesterday_local.strftime('%d'), today_local.strftime('%d')))
-        self.move_section(str(yesterday_local.strftime('%d')), str(today_local.strftime('%d')))
+        for day_to_go_back_to in range(day_count, 0, -1):
+            day_from = today - timedelta(hours=24*day_to_go_back_to)
+            day_to = day_from + timedelta(hours=24)
+            # Tell the datetime object that it's in UTC time zone since 
+            # datetime objects are 'naive' by default
+            day_to = day_to.replace(tzinfo=from_zone)
+            day_from = day_from.replace(tzinfo=from_zone)
+            #utc = utc.replace(tzinfo=from_zone)
+            # Convert time zone
+            day_to_local = day_to.astimezone(to_zone)
+            day_from_local = day_from.astimezone(to_zone)
+
+            print('Moving from {} to {}.'.format(day_from_local.strftime('%d'), day_to_local.strftime('%d')))
+            self.move_section(str(day_from_local.strftime('%d')), str(day_to_local.strftime('%d')))
         return 0
 
     def move_section(self, section_from, section_to):
