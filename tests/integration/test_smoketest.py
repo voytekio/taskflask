@@ -64,7 +64,7 @@ def simple_dates():
     yield {'today': today_local, 'yesterday': yesterday_local, 'tomorrow': tomorrow_local, 'day_before_yesterday': day_before_yesterday_local}
 
 
-@pytest.mark.skip(reason='temporary for perf')
+# @pytest.mark.skip(reason='temporary for perf')
 def test_it_installed():
     # given
     # when
@@ -72,7 +72,7 @@ def test_it_installed():
     # then
     assert 'taskflaskapi' in res
 
-@pytest.mark.skip(reason='temporary for perf')
+# @pytest.mark.skip(reason='temporary for perf')
 def test_help_menu():
     # given
     output_tag = '--today'
@@ -82,7 +82,7 @@ def test_help_menu():
     # then
     assert output_tag in res
 
-@pytest.mark.skip(reason='temporary for perf')
+# @pytest.mark.skip(reason='temporary for perf')
 def test_fix_days(copy_asset_files, simple_dates):
     # given
     # copy of the asset file using the copy fixture
@@ -115,7 +115,7 @@ def test_fix_days(copy_asset_files, simple_dates):
     assert simple_dates['today'].strftime('%a') in line_today
     assert otherday.strftime('%a') in line_otherday
 
-@pytest.mark.skip(reason='temporary for perf')
+# @pytest.mark.skip(reason='temporary for perf')
 def test_move_today(copy_asset_files, simple_dates):
     #pdb.set_trace()
 
