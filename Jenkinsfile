@@ -23,9 +23,17 @@ pipeline {
                 sh 'groups'
             }
         }
+        stage('lint') {
+            steps {
+                sh 'echo ========================'
+                sh 'echo running Lint Stage, pylint src step'
+                sh 'tox -e lint'
+                // sh 'exit 1'
+            }
+        }
         stage('test-unit') {
             steps {
-                sh 'echo ========================'                
+                sh 'echo ========================'
                 sh 'echo running Test Stage, Unit-Tests step'
                 sh 'tox -e unit'
                 // sh 'exit 1'
@@ -33,11 +41,11 @@ pipeline {
         }
         stage('test-integration') {
             steps {
-                sh 'echo ========================'                
+                sh 'echo ========================'
                 sh 'echo running Test Stage, Integration-Tests step'
                 sh 'tox -e integration'
             }
-        }        
+        }
         stage('deploy') {
             steps {
                 sh 'echo ========================='
@@ -48,6 +56,6 @@ pipeline {
     post {
         always {
             echo 'This will always run'
-        }    
+        }
     }
 }
