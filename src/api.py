@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE
 import shlex
 import pdb  # pylint: disable=unused-import
 
-from flask import Flask, jsonify, abort, make_response, request
+from flask import Flask, jsonify, abort, make_response, request  # pylint: disable=import-error
 
 
 app = Flask(__name__)  # pylint: disable=invalid-name

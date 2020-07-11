@@ -8,10 +8,10 @@ setup(name='taskflaskapi',
         package_dir={'taskflask': 'src'},
         packages = ['taskflask'],
         #data_files=[('', ['src/four.vvv'])],
-		install_requires=[
-		#	'Flask',
-			'python-dateutil',
-		],
+        install_requires=[
+        # 'Flask',
+            'python-dateutil',
+        ],
         # scripts = ['taskflask/taskcmd'], # actual name of the file
         entry_points = {
             'console_scripts': ['taskcmd=taskflask.cmdline:main'],
