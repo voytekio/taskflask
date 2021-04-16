@@ -14,7 +14,7 @@ def test_move_today(mocker):
     # when
     res = tklr_obj.move_today(day_count=2)
 
-    # then
+    # then assert we called move_section twice
     assert len(moc1.mock_calls) == 2
     #assert res == 0
 

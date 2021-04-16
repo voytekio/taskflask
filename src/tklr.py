@@ -20,8 +20,9 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
     as well as metadata about sections
     also config data for sections (as of now)
     '''
-    def __init__(self, filename, no_save, debug=False):
+    def __init__(self, filename, no_save, debug=False, desired_tz=None):
         self.now = datetime.now()
+        self.desired_tz = desired_tz
         self.no_save = no_save
         self.sections = []
         self.subsections = []
@@ -209,49 +210,61 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
                 )
                 section_value['heading'] = new_name
 
+    def adjust_tz(self, dateobj):
+        ''' gets a date obj and desired timezone and
+        1. injects local(os) timezone and
+        2. adjusts date to desired timezone if diff from local
+        '''
+        # zone defs are here: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+        # Since datetime objects are 'naive' by default,
+        # inject the timezone(local for now) data into them:
+        os_tzone = tz.tzlocal()
+        dateobj = dateobj.replace(tzinfo=os_tzone)  #11 6:05 PM EST
+
+        # now get desired tz and convert it:
+        print('Desired timezone is: {}'.format(self.desired_tz))
+        desired_tz = tz.gettz(name=self.desired_tz) # if name is Falsy, it gets local timezone
+        if not desired_tz:
+            raise ValueError(
+                "Unable to get timezone from string representation {}".format(
+                    self.desired_tz
+                )
+            )
+
+        # adjust to desired tz (if local it should do nothing)
+        dateobj_in_desired_tz = dateobj.astimezone(desired_tz) #12 0:05 AM CES
+
+        print('date_in_desired_tz: {}'.format(dateobj_in_desired_tz))
+        return dateobj_in_desired_tz
+
     def print_today(self):
         ''' print_today '''
-        from_zone = tz.gettz('UTC')
-        to_zone = tz.gettz('America/New_York')
         today = datetime.now()
-        today = today.replace(tzinfo=from_zone)
-        today_local = today.astimezone(to_zone)
-        return self.get_section(today_local.strftime('%d'))
+        today_adjusted = self.adjust_tz(today)
+        return self.get_section(today_adjusted.strftime('%d'))
 
 
     def move_today(self, day_count):
         ''' goes back day_count days and
         moves their section contents to todays section
         '''
-        #day = figure_day():
-        # date shananigans
-        from_zone = tz.gettz('UTC')
-        to_zone = tz.gettz('America/New_York')
-        # METHOD 2: Auto-detect zones:
-        #from_zone = tz.tzutc()
-        #to_zone = tz.tzlocal()
-        #pdb.set_trace()
-        today = datetime.now()
+        today = datetime.now() #ex 11th 6:05 PM laptop time
+        today_adjusted = self.adjust_tz(today) #12 0:05 AM
 
         for day_to_go_back_to in range(day_count, 0, -1):
-            day_from = today - timedelta(hours=24*day_to_go_back_to)
-            day_to = day_from + timedelta(hours=24)
-            # Tell the datetime object that it's in UTC time zone since
-            # datetime objects are 'naive' by default
-            day_to = day_to.replace(tzinfo=from_zone)
-            day_from = day_from.replace(tzinfo=from_zone)
-            #utc = utc.replace(tzinfo=from_zone)
-            # Convert time zone
-            day_to_local = day_to.astimezone(to_zone)
-            day_from_local = day_from.astimezone(to_zone)
+            day_from = today_adjusted - timedelta(hours=24*day_to_go_back_to)  #11 0:05 AM
+            print('day_from: {}'.format(day_from))
+            day_to = day_from + timedelta(hours=24)                   #12 0:05 AM
+            print('day_to: {}'.format(day_to))
 
             print(
                 'Moving from {} to {}.'.format(
-                    day_from_local.strftime('%d'),
-                    day_to_local.strftime('%d')
+                    day_from.strftime('%d'),
+                    day_to.strftime('%d')
                 )
             )
-            self.move_section(str(day_from_local.strftime('%d')), str(day_to_local.strftime('%d')))
+            self.move_section(str(day_from.strftime('%d')), str(day_to.strftime('%d')))
         return 0
 
     def move_section(self, section_from, section_to):

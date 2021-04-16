@@ -21,6 +21,14 @@ def parseargs():
         )
     parser.add_argument("-p", "--printsection", help="print section by name, ie M6", action='store')
     parser.add_argument(
+        "-z",
+        "--desiredtimezone",
+        help="specify different timezone than local machine. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones. Example: -z 'Europe/Warsaw'",  # pylint: disable=line-too-long
+        action='store',
+    )
+
+    parser.add_argument("-r", "--printtoday", help="print today's section", action='store_true')
+    parser.add_argument(
         "-m",
         "--movesection",
         help="move section's contents from one to another section, -m 'M6-M7'",
@@ -54,10 +62,12 @@ def main():  # pylint: disable=missing-docstring
     #api.app.run(host= '0.0.0.0', debug=True)
     if args.debug:
         pdb.set_trace()
-    tklr = tklrlib.Tklr(args.filename, args.nosave, args.debug)
+    tklr = tklrlib.Tklr(args.filename, args.nosave, args.debug, args.desiredtimezone)
     tklr.load_full_dict()
     if args.printsection:
         print(tklr.get_section(args.printsection), end="")
+    if args.printtoday:
+        print(tklr.print_today())
     if args.movesection:
         from_section = args.movesection.split('-')[0]
         to_section = args.movesection.split('-')[1]
