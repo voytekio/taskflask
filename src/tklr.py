@@ -390,18 +390,20 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
         then modifies the current file
         '''
 
-        if self.no_save:
-            print('no save requested, will print to screen only')
-            print(self.__str__())
-            return True
-
-        # check line counts and back out if not equal
+        # print line counts
         new_len = self.find_len()
         print(
             'orig line count: {}, new file line count: {}'.format(
                 len(self.file_contents), new_len
             )
         )
+
+        if self.no_save:
+            print('no save requested, will print to screen only')
+            print(self.__str__())
+            return True
+
+        # check line counts and back out if not equal
         if abs(len(self.file_contents) - new_len) > 1:
             print('old and new files seem different by line counts, not proceeding')
             return False
