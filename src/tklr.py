@@ -61,6 +61,10 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
                 'ignore': '==',
                 'regex': r'    \S'},
         }
+        self.task_tags = {
+            'tag': '        ',
+            'ignore': '==',
+            'regex': r'        \S'}
 
     def match_keyword(self, line):
         ''' checks if line contains one of the keywords from the dont_match_keywords dict '''
@@ -117,8 +121,8 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             for one_tuple in minor_metadata_list:
                 self.subsections.append(one_tuple)
         # print all subsections now:
-        for section in self.subsections:
-            print(section)
+        #for section in self.subsections:
+        #    print(section)
 
         self.load_into_dict()
 
@@ -135,6 +139,67 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             self.dict[one_subsection.name]['contents'] = self.file_contents[
                 one_subsection.start : one_subsection.end
             ]
+
+    def print2(self, input_list, meta_list):
+        ''' print today's tasks '''
+        #TODO: see if previous print funcs can to this
+        for meta in meta_list:
+            print('NAME: {}'.format(meta.name))
+            for line in input_list['contents'][(meta.start - 1) : meta.end]:
+                print(line)
+            print('')
+
+    def print_stats(self):
+        ''' get # of items in today and print it'''
+        today = datetime.now()
+        today_adjusted = self.adjust_tz(today)
+        today_tag = today_adjusted.strftime('%d')
+        todays_section = self.dict.get(today_tag).get('contents')
+        todays_tasks = self.find_sections2(todays_section, self.task_tags['tag'], self.task_tags['ignore'], self.task_tags['regex'])
+        print('FOUND {} items in today'.format(len(todays_tasks)))
+
+    def find_sections2(self, input_list, tag, ignore_string, regex, start=0, end=None):  # pylint:disable=too-many-arguments
+        '''
+        SUMMARY: same as find_section but use named_input rather than take from file
+        '''
+        temp_list = []
+        temp_list = input_list[start:end]
+        ret_list = []
+        for line_counter, one_line in enumerate(temp_list):
+            if (
+                    re.match(regex, one_line)
+                    and ignore_string not in one_line
+                    and not self.match_keyword(one_line) #TODO: fix this - match_keywords and ignore_string seem the same
+            ):
+                tag_name = one_line.strip(tag).rstrip('\n')
+                tag_name = tag_name.split(':')[0] if ':' in tag_name else tag_name
+                section = Section_Tuple_Class(
+                    name=tag_name,
+                    start=line_counter+1+start,
+                    end=0,
+                    full_name=one_line
+                )
+                ret_list.append(section)
+        # easiest way to calculate section end is to look at start of next element
+        #pdb.set_trace()# if self.debug else None
+        for count, one_section in enumerate(ret_list):
+            try:
+                section_end = ret_list[count+1].start - 1 #one line before start of next section
+            except IndexError:
+                ret_list[count] = Section_Tuple_Class(
+                    name=one_section.name,
+                    start=one_section.start,
+                    end=line_counter+1 + start,  # pylint: disable=undefined-loop-variable
+                    full_name=one_section.full_name
+                )
+            else:
+                ret_list[count] = Section_Tuple_Class(
+                    name=one_section.name,
+                    start=one_section.start,
+                    end=section_end,
+                    full_name=one_section.full_name
+                )
+        return ret_list
 
 
     def find_sections(self, tag, ignore_string, regex, start=0, end=None):  # pylint:disable=too-many-arguments
@@ -354,6 +419,7 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
 
     def __str__(self):
         print_string = ''
+        return 'skipping print to screen'
         for k, _ in six.iteritems(self.dict):
             print_string += (self.get_section(k))
         return print_string

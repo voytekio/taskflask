@@ -77,7 +77,8 @@ def main():  # pylint: disable=missing-docstring
         print(tklr.get_section(to_section))
     if args.today:
         tklr.move_today(int(args.daycount))
-        print(tklr.print_today())
+        #print(tklr.print_today())
+        tklr.print_stats()
         tklr.save_file()
     if args.dayfix:
         tklr.day_fix()
