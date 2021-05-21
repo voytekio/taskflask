@@ -41,25 +41,36 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             'NOTES',
             'EVENING',
             'BRAINDEAD',
-            'DONEs',
+            #'DONEs',
         ]
         self.searchtags = {
             'major_sections': {
+                #'level': 0,
                 'tag': '========== ',
                 'ignore': 'e.of',
                 'regex': r'========== '},
             'INs': {
+                #'level': 1,
                 'tag': '    ',
                 'ignore': '==',
                 'regex': r'    \S'},
             'projects': {
+                #'level': 1,
                 'tag': '',
                 'ignore': '=====',
                 'regex': r'\S'},
+            #TODO: level and subsections could be used to freely browse sections and go up and down istead of currently just a dict with all subsections and a separate calendar_task
             'calendar': {
+                #'level': 1,
                 'tag': '    ',
                 'ignore': '==',
+                #'subsections': 'calendar_task',
                 'regex': r'    \S'},
+            'calendar_task': {
+                #'level': 2,
+                'tag': '        ',
+                'ignore': '==',
+                'regex': r'        \S'},
         }
         self.task_tags = {
             'tag': '        ',
@@ -140,23 +151,37 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
                 one_subsection.start : one_subsection.end
             ]
 
-    def print2(self, input_list, meta_list):
-        ''' print today's tasks '''
-        #TODO: see if previous print funcs can to this
-        for meta in meta_list:
-            print('NAME: {}'.format(meta.name))
-            for line in input_list['contents'][(meta.start - 1) : meta.end]:
-                print(line)
-            print('')
-
-    def print_stats(self):
-        ''' get # of items in today and print it'''
+    def get_todays_tag(self):
         today = datetime.now()
         today_adjusted = self.adjust_tz(today)
         today_tag = today_adjusted.strftime('%d')
-        todays_section = self.dict.get(today_tag).get('contents')
-        todays_tasks = self.find_sections2(todays_section, self.task_tags['tag'], self.task_tags['ignore'], self.task_tags['regex'])
-        print('FOUND {} items in today'.format(len(todays_tasks)))
+        return today_tag
+
+    def print_stats(self, tag):
+        ''' get # of items in today and print it'''
+        '''
+        today = datetime.now()
+        today_adjusted = self.adjust_tz(today)
+        today_tag = today_adjusted.strftime('%d')
+        '''
+        section = self.dict.get(tag).get('contents')
+        tasks = self.find_sections2(section, self.task_tags['tag'], self.task_tags['ignore'], self.task_tags['regex'])
+        print('FOUND {} tasks'.format(len(tasks)))
+
+
+    def print_tasks(self, tag, include_contents = False):
+        ''' print today's tasks '''
+        #TODO: see if previous print funcs can to this
+        section = self.dict.get(tag).get('contents')
+        # or section - self.get_section(tag)
+        tasks = self.find_sections2(section, self.task_tags['tag'], self.task_tags['ignore'], self.task_tags['regex'])
+        print('')
+        for task in tasks:
+            print('NAME: {}'.format(task.name))
+            if include_contents:
+                for line in section[(task.start - 1) : task.end]:
+                    print(line)
+        print('')
 
     def find_sections2(self, input_list, tag, ignore_string, regex, start=0, end=None):  # pylint:disable=too-many-arguments
         '''
@@ -172,6 +197,9 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
                     and not self.match_keyword(one_line) #TODO: fix this - match_keywords and ignore_string seem the same
             ):
                 tag_name = one_line.strip(tag).rstrip('\n')
+                if len(tag_name) <= 2:
+                    print('WARNING: IGNORING SMALL NAME: {}({})'.format(tag_name, len(tag_name)))
+                    continue
                 tag_name = tag_name.split(':')[0] if ':' in tag_name else tag_name
                 section = Section_Tuple_Class(
                     name=tag_name,
@@ -224,6 +252,9 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             ):
                 # pdb.set_trace()
                 tag_name = one_line.strip(tag).rstrip('\n')
+                if len(tag_name) <= 2:
+                    print('WARNING: IGNORING SMALL NAME: {}({})'.format(tag_name, len(tag_name)))
+                    continue
                 tag_name = tag_name.split(':')[0]
                 section = Section_Tuple_Class(
                     name=tag_name,
@@ -303,6 +334,7 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
         print('date_in_desired_tz: {}'.format(dateobj_in_desired_tz))
         return dateobj_in_desired_tz
 
+
     def print_today(self):
         ''' print_today '''
         today = datetime.now()
@@ -349,7 +381,6 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
                 minors = minors + k + ','
             print('Minor sections: ({})'.format(minors))
         ret = ''
-        #pdb.set_trace()
         ret = self.dict[section_name]['heading'] + '\n'
         for line in self.dict[section_name]['contents']:
             ret += line + '\n'
