@@ -28,6 +28,7 @@ def parseargs():
     )
 
     parser.add_argument("-r", "--printtoday", help="print today's section", action='store_true')
+    parser.add_argument("-u", "--fullcontent", help="when printing, print contents in addition to headings", action='store_true')
     parser.add_argument(
         "-m",
         "--movesection",
@@ -65,9 +66,15 @@ def main():  # pylint: disable=missing-docstring
     tklr = tklrlib.Tklr(args.filename, args.nosave, args.debug, args.desiredtimezone)
     tklr.load_full_dict()
     if args.printsection:
-        print(tklr.get_section(args.printsection), end="")
+        section_name = args.printsection
+        print(tklr.get_section(section_name), end="")
+        tklr.print_tasks(section_name, include_contents=args.fullcontent)
+        tklr.print_stats(section_name)
     if args.printtoday:
-        print(tklr.print_today())
+        todays_tag = tklr.get_todays_tag()
+        #print(tklr.print_today())
+        tklr.print_tasks(todays_tag, include_contents=args.fullcontent)
+        tklr.print_stats(todays_tag)
     if args.movesection:
         from_section = args.movesection.split('-')[0]
         to_section = args.movesection.split('-')[1]
@@ -77,7 +84,10 @@ def main():  # pylint: disable=missing-docstring
         print(tklr.get_section(to_section))
     if args.today:
         tklr.move_today(int(args.daycount))
-        print(tklr.print_today())
+        #print(tklr.print_today())
+        todays_tag = tklr.get_todays_tag()
+        tklr.print_tasks(todays_tag, include_contents=args.fullcontent)
+        tklr.print_stats(todays_tag)
         tklr.save_file()
     if args.dayfix:
         tklr.day_fix()

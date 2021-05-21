@@ -41,26 +41,41 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             'NOTES',
             'EVENING',
             'BRAINDEAD',
-            'DONEs',
+            #'DONEs',
         ]
         self.searchtags = {
             'major_sections': {
+                #'level': 0,
                 'tag': '========== ',
                 'ignore': 'e.of',
                 'regex': r'========== '},
             'INs': {
+                #'level': 1,
                 'tag': '    ',
                 'ignore': '==',
                 'regex': r'    \S'},
             'projects': {
+                #'level': 1,
                 'tag': '',
                 'ignore': '=====',
                 'regex': r'\S'},
+            #TODO: level and subsections could be used to freely browse sections and go up and down istead of currently just a dict with all subsections and a separate calendar_task
             'calendar': {
+                #'level': 1,
                 'tag': '    ',
                 'ignore': '==',
+                #'subsections': 'calendar_task',
                 'regex': r'    \S'},
+            'calendar_task': {
+                #'level': 2,
+                'tag': '        ',
+                'ignore': '==',
+                'regex': r'        \S'},
         }
+        self.task_tags = {
+            'tag': '        ',
+            'ignore': '==',
+            'regex': r'        \S'}
 
     def match_keyword(self, line):
         ''' checks if line contains one of the keywords from the dont_match_keywords dict '''
@@ -117,8 +132,8 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             for one_tuple in minor_metadata_list:
                 self.subsections.append(one_tuple)
         # print all subsections now:
-        for section in self.subsections:
-            print(section)
+        #for section in self.subsections:
+        #    print(section)
 
         self.load_into_dict()
 
@@ -135,6 +150,84 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             self.dict[one_subsection.name]['contents'] = self.file_contents[
                 one_subsection.start : one_subsection.end
             ]
+
+    def get_todays_tag(self):
+        today = datetime.now()
+        today_adjusted = self.adjust_tz(today)
+        today_tag = today_adjusted.strftime('%d')
+        return today_tag
+
+    def print_stats(self, tag):
+        ''' get # of items in today and print it'''
+        '''
+        today = datetime.now()
+        today_adjusted = self.adjust_tz(today)
+        today_tag = today_adjusted.strftime('%d')
+        '''
+        section = self.dict.get(tag).get('contents')
+        tasks = self.find_sections2(section, self.task_tags['tag'], self.task_tags['ignore'], self.task_tags['regex'])
+        print('FOUND {} tasks'.format(len(tasks)))
+
+
+    def print_tasks(self, tag, include_contents = False):
+        ''' print today's tasks '''
+        #TODO: see if previous print funcs can to this
+        section = self.dict.get(tag).get('contents')
+        # or section - self.get_section(tag)
+        tasks = self.find_sections2(section, self.task_tags['tag'], self.task_tags['ignore'], self.task_tags['regex'])
+        print('')
+        for task in tasks:
+            print('NAME: {}'.format(task.name))
+            if include_contents:
+                for line in section[(task.start - 1) : task.end]:
+                    print(line)
+        print('')
+
+    def find_sections2(self, input_list, tag, ignore_string, regex, start=0, end=None):  # pylint:disable=too-many-arguments
+        '''
+        SUMMARY: same as find_section but use named_input rather than take from file
+        '''
+        temp_list = []
+        temp_list = input_list[start:end]
+        ret_list = []
+        for line_counter, one_line in enumerate(temp_list):
+            if (
+                    re.match(regex, one_line)
+                    and ignore_string not in one_line
+                    and not self.match_keyword(one_line) #TODO: fix this - match_keywords and ignore_string seem the same
+            ):
+                tag_name = one_line.strip(tag).rstrip('\n')
+                if len(tag_name) <= 2:
+                    print('WARNING: IGNORING SMALL NAME: {}({})'.format(tag_name, len(tag_name)))
+                    continue
+                tag_name = tag_name.split(':')[0] if ':' in tag_name else tag_name
+                section = Section_Tuple_Class(
+                    name=tag_name,
+                    start=line_counter+1+start,
+                    end=0,
+                    full_name=one_line
+                )
+                ret_list.append(section)
+        # easiest way to calculate section end is to look at start of next element
+        #pdb.set_trace()# if self.debug else None
+        for count, one_section in enumerate(ret_list):
+            try:
+                section_end = ret_list[count+1].start - 1 #one line before start of next section
+            except IndexError:
+                ret_list[count] = Section_Tuple_Class(
+                    name=one_section.name,
+                    start=one_section.start,
+                    end=line_counter+1 + start,  # pylint: disable=undefined-loop-variable
+                    full_name=one_section.full_name
+                )
+            else:
+                ret_list[count] = Section_Tuple_Class(
+                    name=one_section.name,
+                    start=one_section.start,
+                    end=section_end,
+                    full_name=one_section.full_name
+                )
+        return ret_list
 
 
     def find_sections(self, tag, ignore_string, regex, start=0, end=None):  # pylint:disable=too-many-arguments
@@ -159,6 +252,9 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
             ):
                 # pdb.set_trace()
                 tag_name = one_line.strip(tag).rstrip('\n')
+                if len(tag_name) <= 2:
+                    print('WARNING: IGNORING SMALL NAME: {}({})'.format(tag_name, len(tag_name)))
+                    continue
                 tag_name = tag_name.split(':')[0]
                 section = Section_Tuple_Class(
                     name=tag_name,
@@ -238,6 +334,7 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
         print('date_in_desired_tz: {}'.format(dateobj_in_desired_tz))
         return dateobj_in_desired_tz
 
+
     def print_today(self):
         ''' print_today '''
         today = datetime.now()
@@ -284,7 +381,6 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
                 minors = minors + k + ','
             print('Minor sections: ({})'.format(minors))
         ret = ''
-        #pdb.set_trace()
         ret = self.dict[section_name]['heading'] + '\n'
         for line in self.dict[section_name]['contents']:
             ret += line + '\n'
@@ -325,18 +421,20 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
         then modifies the current file
         '''
 
-        if self.no_save:
-            print('no save requested, will print to screen only')
-            print(self.__str__())
-            return True
-
-        # check line counts and back out if not equal
+        # print line counts
         new_len = self.find_len()
         print(
             'orig line count: {}, new file line count: {}'.format(
                 len(self.file_contents), new_len
             )
         )
+
+        if self.no_save:
+            print('no save requested, will print to screen only')
+            print(self.__str__())
+            return True
+
+        # check line counts and back out if not equal
         if abs(len(self.file_contents) - new_len) > 1:
             print('old and new files seem different by line counts, not proceeding')
             return False
@@ -354,6 +452,7 @@ class Tklr(object):  # pylint:disable=too-many-instance-attributes
 
     def __str__(self):
         print_string = ''
+        return 'skipping print to screen'
         for k, _ in six.iteritems(self.dict):
             print_string += (self.get_section(k))
         return print_string
