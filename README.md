@@ -21,3 +21,13 @@ task app with flask api
 * cd into repo dir (with tox.ini file)
 * list tox tests with `tox -l`
 * run with `tox -e <tox_test>` ex: `tox -e unit`
+
+## Build
+* increment version in setup.py
+* run tests: `tox` (activate a venv w/ tox installed first)
+* build w/ `python setup.py build sdist`
+* your build artifact should be in `<repo>/dist/<name>-<version>.tar.gz`
+
+## Deploy
+* activate venv
+* install/upgrade w/ `pip install --upgrade <repo>/dist/<name>-<version>.tar.gz`
